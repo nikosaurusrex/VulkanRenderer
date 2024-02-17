@@ -1,4 +1,5 @@
 # Vulkan Renderer
+Learning Vulkan
 
 ## Todo
 * Lights
@@ -6,6 +7,10 @@
 * Font Renderer
 * Images
 * Indirect Rendering
+* Culling
+* PBR
+* Mesh Shaders?
+* Raytracing?
 * Windows Support
 * MacOS Support
 * Assets
