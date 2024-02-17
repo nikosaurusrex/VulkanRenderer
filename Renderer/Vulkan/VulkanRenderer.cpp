@@ -2,15 +2,39 @@
 
 PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetFunc = 0;
 
+static bool CheckLayerSUpport(const char *name) {
+	u32 property_count = 0;
+	VK_CHECK(vkEnumerateInstanceLayerProperties(&property_count, 0));
+
+	array<VkLayerProperties> properties(property_count);
+	VK_CHECK(vkEnumerateInstanceLayerProperties(&property_count, properties.data()));
+
+	for (u32 i = 0; i < property_count; ++i) {
+		if (strcmp(name, properties[i].layerName) == 0) {
+			return true;
+        }
+    }
+
+	return false;
+}
+
 VulkanContext VulkanContext::Get(bool enable_layers) {
     VulkanContext ctx;
 
     if (enable_layers) {
         ctx.layers = {
-       //     "VK_LAYER_LUNARG_core_validation"
+            "VK_LAYER_KHRONOS_validation"
         };
     } else {
         ctx.layers = {};
+    }
+
+    for (const char *layer : ctx.layers) {
+        if (!CheckLayerSUpport(layer)) {
+            LogInfo("Layer %s not supported - Validation layers disabled", layer);
+            ctx.layers = {};
+            break;
+        }
     }
 
     const char **extensions;
