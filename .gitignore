@@ -1,0 +1,10 @@
+bin/**
+Renderer/Assets/Fonts/**
+Renderer/Assets/Models/**
+Renderer/Assets/Shaders/*.spv
+Renderer/Assets/Sounds/**
+Renderer/Assets/Textures/**
+
+*.make
+Makefile
+imgui.ini
