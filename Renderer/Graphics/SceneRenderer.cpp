@@ -2,8 +2,8 @@
 
 SceneRenderer::SceneRenderer(VulkanSwapchain *swapchain, RenderPass *render_pass) : render_pass(render_pass) {
     Shader vertex_shader, fragment_shader;
-    vertex_shader.Create("Renderer/Assets/Shaders/simple.vert.spv");
-    fragment_shader.Create("Renderer/Assets/Shaders/simple.frag.spv");
+    vertex_shader.Create("Renderer/Assets/Shaders/lowpoly.vert.spv");
+    fragment_shader.Create("Renderer/Assets/Shaders/lowpoly.frag.spv");
 
     PipelineInfo pipeline_info;
     pipeline_info.AddShader(VK_SHADER_STAGE_VERTEX_BIT, &vertex_shader);

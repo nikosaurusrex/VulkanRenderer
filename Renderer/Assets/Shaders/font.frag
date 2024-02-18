@@ -1,13 +1,13 @@
-#version 330 core
+#version 450
 
-in vec2 uv_coords;
+layout(location=0) in vec2 uv_coords;
+layout(location=1) in vec3 frag_color;
 
-out vec4 color;
+layout(location=0) out vec4 out_color;
 
-uniform sampler2D text;
-uniform vec3 text_color;
+layout(binding=0) uniform sampler2D text;
 
 void main() {
     vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, uv_coords).r);
-    color = vec4(text_color, 1.0) * sampled;
+    out_color = vec4(frag_color, 1.0) * sampled;
 }

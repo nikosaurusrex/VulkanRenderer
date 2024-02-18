@@ -1,13 +1,11 @@
-#version 330 core
+#version 450
 
-in vec3 tex_coords;
+layout(location=0) in vec3 tex_coords;
 
-out vec4 color;
-out int out_entity;
+layout(location=0) out vec4 out_color;
 
-uniform samplerCube skybox;
+layout(binding=0) uniform samplerCube skybox;
 
 void main() {
-	color = texture(skybox, tex_coords);
-	out_entity = 0;
+	out_color = texture(skybox, tex_coords);
 }

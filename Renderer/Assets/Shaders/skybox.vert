@@ -1,13 +1,16 @@
-#version 330 core
+#version 450
 
-layout (location = 0) in vec3 pos;
+layout(binding=0) readonly buffer SkyboxData {
+    mat4 proj_matrix;
+    mat4 view_matrix;
+    vec3 positions[];
+};
 
-out vec3 tex_coords;
-
-uniform mat4 proj_matrix;
-uniform mat4 view_matrix;
+layout(location=0) out vec3 tex_coords;
 
 void main() {
+    vec3 pos = positions[gl_VertexIndex];
+
 	vec4 p = proj_matrix * view_matrix * vec4(pos, 1.0);
 
 	gl_Position = p.xyww;
