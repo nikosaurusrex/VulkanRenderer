@@ -2,10 +2,12 @@
 Learning Vulkan
 
 ## Todo
-* Lights
+* Framebuffers
 * ImGui
 * Font Renderer
 * Images
+* Shadows
+* MSAA
 * Indirect Rendering
 * Culling
 * PBR

@@ -141,7 +141,7 @@ int main() {
 	point_light.diffuse = glm::vec4(1.0f);
 
 	scene_data.point_lights[0] = point_light;
-	scene_data.num_point_lights = 1;
+	scene_data.num_point_lights = 0;
 
 	bool show_editor = false;
 	bool show_render_stats = false;

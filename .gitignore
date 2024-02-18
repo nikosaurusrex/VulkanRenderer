@@ -8,3 +8,5 @@ Renderer/Assets/Textures/**
 *.make
 Makefile
 imgui.ini
+
+.vscode/**

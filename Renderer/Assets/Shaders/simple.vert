@@ -53,7 +53,8 @@ layout(push_constant) uniform MeshData {
 vec3 CalculateDirLight(DirectionalLight light, Material mat, vec3 normal) {
 	vec3 ray = normalize(light.dir);
 	
-    vec4 ambient = light.ambient * mat.ambient;
+    // say mat.diffuse here because my assets atm dont have ambient set
+    vec4 ambient = light.ambient * mat.diffuse;
     float diff = max(dot(normal, ray), 0.0);
     vec4 diffuse = light.diffuse * (diff * mat.diffuse);
 
@@ -63,7 +64,8 @@ vec3 CalculateDirLight(DirectionalLight light, Material mat, vec3 normal) {
 vec3 CalculatePointLight(PointLight light, Material mat, vec3 normal, vec3 frag_pos) {
 	vec3 ray = normalize(light.pos - frag_pos);
 	
-	vec4 ambient = light.ambient * mat.ambient;
+    // say mat.diffuse here because my assets atm dont have ambient set
+	vec4 ambient = light.ambient * mat.diffuse;
 	float diff = max(dot(normal, ray), 0.0);
 	vec4 diffuse = light.diffuse * (diff * mat.diffuse);
 
