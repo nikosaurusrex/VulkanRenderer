@@ -21,11 +21,15 @@ SceneRenderer::SceneRenderer(VulkanSwapchain *swapchain, RenderPass *render_pass
     vertex_shader.Destroy();
     fragment_shader.Destroy();
 
+    descriptor_update_template = CreateDescriptorUpdateTemplate(&pipeline, &pipeline_info, VK_PIPELINE_BIND_POINT_GRAPHICS);
+
     RenderStats::Create();
 }
 
 SceneRenderer::~SceneRenderer() {
     RenderStats::Destroy();
+
+    vkDestroyDescriptorUpdateTemplate(VulkanDevice::handle, descriptor_update_template, 0);
 
     scene_data_buffer.Destroy();
     pipeline.Destroy();
@@ -54,55 +58,19 @@ void SceneRenderer::SetSceneData(SceneData *scene_data) {
     u32 size = 3 * sizeof(glm::mat4) + 16 + scene_data->num_point_lights * sizeof(PointLight);
     
     scene_data_buffer.SetData(scene_data, size);
-
-    VkDescriptorBufferInfo scene_data_buffer_info;
-    scene_data_buffer_info.buffer = scene_data_buffer.buffer;
-    scene_data_buffer_info.offset = 0;
-    scene_data_buffer_info.range = size;
-
-    VkWriteDescriptorSet scene_write_descriptors[1] = {};
-    scene_write_descriptors[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    scene_write_descriptors[0].dstBinding = 0;
-    scene_write_descriptors[0].descriptorCount = 1;
-    scene_write_descriptors[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    scene_write_descriptors[0].pBufferInfo = &scene_data_buffer_info;
-
-    vkCmdPushDescriptorSetFunc(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.layout, 0, ARRAY_SIZE(scene_write_descriptors), scene_write_descriptors);
 }
 
 void SceneRenderer::RenderModel(Model *model) {
-    VkDescriptorBufferInfo material_buffer_info;
-    material_buffer_info.buffer = model->materials_buffer->buffer;
-    material_buffer_info.offset = 0;
-    material_buffer_info.range = model->materials_buffer->size;
-
-    VkWriteDescriptorSet material_write_descriptors[1] = {};
-    material_write_descriptors[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    material_write_descriptors[0].dstBinding = 2;
-    material_write_descriptors[0].descriptorCount = 1;
-    material_write_descriptors[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    material_write_descriptors[0].pBufferInfo = &material_buffer_info;
-
-    vkCmdPushDescriptorSetFunc(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.layout, 0, ARRAY_SIZE(material_write_descriptors), material_write_descriptors);
-
     for (Mesh *mesh : model->meshes) {
-        VkWriteDescriptorSet mesh_write_descriptors[1] = {};
+        DescriptorInfo updates[3] = { 
+            &scene_data_buffer,
+            mesh->vertices_buffer,
+            model->materials_buffer
+        };
 
-        VkDescriptorBufferInfo vertex_buffer_info = {};
-        VkDeviceSize vertex_buffer_size = mesh->vertices_buffer->size;
-        vertex_buffer_info.buffer = mesh->vertices_buffer->buffer;
-        vertex_buffer_info.offset = 0;
-        vertex_buffer_info.range = vertex_buffer_size;
+        vkCmdPushDescriptorSetWithTemplateFunc(cmd_buf, descriptor_update_template, pipeline.layout, 0, updates);
 
-        RenderStats::CountTriangles(vertex_buffer_size / sizeof(Vertex) / 3);
-
-        mesh_write_descriptors[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        mesh_write_descriptors[0].dstBinding = 1;
-        mesh_write_descriptors[0].descriptorCount = 1;
-        mesh_write_descriptors[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        mesh_write_descriptors[0].pBufferInfo = &vertex_buffer_info;
-
-        vkCmdPushDescriptorSetFunc(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.layout, 0, ARRAY_SIZE(mesh_write_descriptors), mesh_write_descriptors);
+        RenderStats::CountTriangles(mesh->vertices_buffer->size / sizeof(Vertex) / 3);
 
         MeshData mesh_data;
         mesh_data.material_index = mesh->material_index;

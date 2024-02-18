@@ -1,6 +1,7 @@
 #include "VulkanRenderer.h"
 
 PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetFunc = 0;
+PFN_vkCmdPushDescriptorSetWithTemplateKHR vkCmdPushDescriptorSetWithTemplateFunc = 0;
 
 VkPhysicalDevice VulkanPhysicalDevice::handle = 0;
 VkPhysicalDeviceMemoryProperties VulkanPhysicalDevice::memory_properties = {};
@@ -134,9 +135,9 @@ void VulkanDevice::Create(VulkanContext *ctx) {
 
     VkDeviceCreateInfo device_info = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     device_info.ppEnabledExtensionNames = ctx->device_extensions.data();
-    device_info.enabledExtensionCount = (u32) ctx->device_extensions.size();
+    device_info.enabledExtensionCount = u32(ctx->device_extensions.size());
     device_info.ppEnabledLayerNames = ctx->layers.data();
-    device_info.enabledLayerCount = (u32) ctx->layers.size();
+    device_info.enabledLayerCount = u32(ctx->layers.size());
     device_info.pEnabledFeatures = &features_core;
     device_info.queueCreateInfoCount = queue_create_info_count;
     device_info.pQueueCreateInfos = queue_create_infos;
@@ -156,6 +157,7 @@ void VulkanDevice::Create(VulkanContext *ctx) {
     present_index = VulkanPhysicalDevice::present;
 
     vkCmdPushDescriptorSetFunc = (PFN_vkCmdPushDescriptorSetKHR) vkGetDeviceProcAddr(device, "vkCmdPushDescriptorSetKHR");
+    vkCmdPushDescriptorSetWithTemplateFunc = (PFN_vkCmdPushDescriptorSetWithTemplateKHR) vkGetDeviceProcAddr(device, "vkCmdPushDescriptorSetWithTemplateKHR");
 }
 
 void VulkanDevice::Destroy() {

@@ -71,9 +71,9 @@ void VulkanInstance::Create(VulkanContext *ctx, GLFWwindow *window, const char *
     VkInstanceCreateInfo instance_info = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     instance_info.pApplicationInfo = &app_info;
     instance_info.ppEnabledExtensionNames = ctx->global_extensions.data();
-    instance_info.enabledExtensionCount = (u32) ctx->global_extensions.size();
+    instance_info.enabledExtensionCount = u32(ctx->global_extensions.size());
     instance_info.ppEnabledLayerNames = ctx->layers.data();
-    instance_info.enabledLayerCount = (u32) ctx->layers.size();
+    instance_info.enabledLayerCount = u32(ctx->layers.size());
 
     // VK_CHECK(vkCreateInstance(&instance_info, 0, &handle));
     int result = vkCreateInstance(&instance_info, 0, &handle);

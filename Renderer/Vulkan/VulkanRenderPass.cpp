@@ -3,7 +3,7 @@
 void RenderPass::Create(VulkanSwapchain *swapchain) {
     this->swapchain = swapchain;
 
-    frames_in_flight = (u32) swapchain->color_images.size();
+    frames_in_flight = u32(swapchain->color_images.size());
 
     graphics_command_pool.Create(VulkanDevice::graphics_index);
     graphics_command_buffers.Create(&graphics_command_pool, frames_in_flight);
@@ -138,7 +138,7 @@ void RenderPass::Begin() {
 
     vkCmdBeginRendering(graphics_command_buffer, &rendering_info);
 
-    VkViewport viewport = { 0.0f, 0.0f, (f32) swapchain->extent.width, (f32) swapchain->extent.height, 0.0f, 1.0f };
+    VkViewport viewport = { 0.0f, 0.0f, f32(swapchain->extent.width), f32(swapchain->extent.height), 0.0f, 1.0f };
     VkRect2D scissor = { { 0, 0 }, swapchain->extent };
 
     vkCmdSetViewport(graphics_command_buffer, 0, 1, &viewport);

@@ -41,7 +41,7 @@ void PipelineInfo::AddShader(VkShaderStageFlagBits stage, Shader *shader) {
 
 void PipelineInfo::AddBinding(VkShaderStageFlags stage, VkDescriptorType type) {
     VkDescriptorSetLayoutBinding set_binding = {};
-    set_binding.binding = (u32) set_bindings.size();
+    set_binding.binding = u32(set_bindings.size());
     set_binding.descriptorType = type;
     set_binding.descriptorCount = 1;
     set_binding.stageFlags = stage;
@@ -64,7 +64,7 @@ void Pipeline::Create(VulkanSwapchain *swapchain, PipelineInfo *info) {
 
     VkDescriptorSetLayoutCreateInfo set_create_info = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     set_create_info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
-    set_create_info.bindingCount = (u32) info->set_bindings.size();
+    set_create_info.bindingCount = u32(info->set_bindings.size());
     set_create_info.pBindings = info->set_bindings.data();
 
     VK_CHECK(vkCreateDescriptorSetLayout(device, &set_create_info, 0, &descriptor_set_layout));
@@ -88,7 +88,7 @@ void Pipeline::Create(VulkanSwapchain *swapchain, PipelineInfo *info) {
     };
 
     VkPipelineDynamicStateCreateInfo dynamic_state_info = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-    dynamic_state_info.dynamicStateCount = (u32) dynamic_states.size();
+    dynamic_state_info.dynamicStateCount = u32(dynamic_states.size());
     dynamic_state_info.pDynamicStates = dynamic_states.data();
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -145,7 +145,7 @@ void Pipeline::Create(VulkanSwapchain *swapchain, PipelineInfo *info) {
 
     VkGraphicsPipelineCreateInfo pipeline_info = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
     pipeline_info.pNext = &rendering_info;
-    pipeline_info.stageCount = (u32) shaders.size();
+    pipeline_info.stageCount = u32(shaders.size());
     pipeline_info.pStages = shaders.data();
     pipeline_info.pVertexInputState = &vertex_input_info;
     pipeline_info.pInputAssemblyState = &input_assembly_info;
@@ -166,4 +166,32 @@ void Pipeline::Destroy() {
     vkDestroyPipeline(device, handle, 0);
     vkDestroyPipelineLayout(device, layout, 0);
     vkDestroyDescriptorSetLayout(device, descriptor_set_layout, 0);
+}
+
+VkDescriptorUpdateTemplate CreateDescriptorUpdateTemplate(Pipeline *pipeline, PipelineInfo *info, VkPipelineBindPoint bind_point) {
+    // Note: this assumes we we use every binding from 0 to n
+    array<VkDescriptorUpdateTemplateEntry> entries(info->set_bindings.size());
+     
+    for (u32 i = 0; i < info->set_bindings.size(); ++i) {
+        entries[i].dstBinding = i;
+        entries[i].dstArrayElement = 0;
+        entries[i].descriptorCount = 1;
+        entries[i].descriptorType = info->set_bindings[i].descriptorType;
+        entries[i].offset = i * sizeof(DescriptorInfo);
+        entries[i].stride = sizeof(DescriptorInfo);
+    }
+
+    VkDescriptorUpdateTemplateCreateInfo update_template_info = { VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO };
+
+    update_template_info.descriptorUpdateEntryCount = u32(entries.size());
+    update_template_info.pDescriptorUpdateEntries = entries.data();
+    update_template_info.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET;
+    update_template_info.descriptorSetLayout = pipeline->descriptor_set_layout;
+    update_template_info.pipelineBindPoint = bind_point;
+    update_template_info.pipelineLayout = pipeline->layout;
+
+    VkDescriptorUpdateTemplate update_template;
+    VK_CHECK(vkCreateDescriptorUpdateTemplate(VulkanDevice::handle, &update_template_info, 0, &update_template));
+
+    return update_template;
 }

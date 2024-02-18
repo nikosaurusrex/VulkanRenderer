@@ -27,5 +27,6 @@ struct VulkanDevice {
 
 // Meh
 extern PFN_vkCmdPushDescriptorSetKHR vkCmdPushDescriptorSetFunc;
+extern PFN_vkCmdPushDescriptorSetWithTemplateKHR vkCmdPushDescriptorSetWithTemplateFunc;
 
 #endif

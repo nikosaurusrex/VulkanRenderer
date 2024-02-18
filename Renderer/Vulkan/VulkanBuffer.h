@@ -1,7 +1,7 @@
 #ifndef VULKAN_BUFFER_H
 #define VULKAN_BUFFER_H
 
-struct VulkanImage {
+struct Image {
     VkImage handle;
     VkImageView view;
     VkDeviceMemory memory;

@@ -31,7 +31,7 @@ void VulkanCommandBuffers::Create(VulkanCommandPool *pool, u32 count) {
 }
 
 void VulkanCommandBuffers::Destroy() {
-    vkFreeCommandBuffers(VulkanDevice::handle, pool->handle, (u32) buffers.size(), buffers.data());
+    vkFreeCommandBuffers(VulkanDevice::handle, pool->handle, u32(buffers.size()), buffers.data());
 }
 
 void VulkanCommandBuffers::Begin(u32 index, VkCommandBufferUsageFlags flags) {

@@ -7,7 +7,7 @@ struct VulkanSwapchain {
     VkExtent2D extent;
     array<VkImage> color_images;
     array<VkImageView> color_views;
-    VulkanImage depth_image;
+    Image depth_image;
     bool vsync;
     
     VkSurfaceFormatKHR ChooseFormat();

@@ -196,7 +196,7 @@ int main() {
 		}
 
 		f64 current_time = glfwGetTime();
-		delta_time = (f32) (current_time - last_time);
+		delta_time = f32(current_time - last_time);
 		last_time = current_time;
 
         camera.Update(engine.window, delta_time);

@@ -4,18 +4,19 @@
 #include "Vulkan/VulkanRenderer.h"
 #include "Graphics/Model.h"
 
-struct SceneData {
-    alignas(16) glm::mat4 projection;
-    alignas(16) glm::mat4 view;
-    alignas(16) DirectionalLight dir_light;
-    alignas(16) u8 num_point_lights;
-    alignas(16) PointLight point_lights[10];
+struct alignas(16) SceneData {
+    glm::mat4 projection;
+    glm::mat4 view;
+    DirectionalLight dir_light;
+    u8 num_point_lights;
+    PointLight point_lights[10];
 };
 
 struct SceneRenderer {
     RenderPass *render_pass;
     Pipeline pipeline;
     VkCommandBuffer cmd_buf;
+    VkDescriptorUpdateTemplate descriptor_update_template;
 
     StorageBuffer scene_data_buffer;
 

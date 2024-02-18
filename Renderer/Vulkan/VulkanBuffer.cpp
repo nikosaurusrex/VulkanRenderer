@@ -66,7 +66,7 @@ static void CopyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size, VkCommandP
     vkFreeCommandBuffers(device, command_pool, 1, &command_buffer);
 }
 
-void VulkanImage::Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSampleCountFlagBits samples, VkImageUsageFlags usage) {
+void Image::Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSampleCountFlagBits samples, VkImageUsageFlags usage) {
     VkImageCreateInfo image_info = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
     image_info.imageType = VK_IMAGE_TYPE_2D;
     image_info.format = format;
@@ -108,7 +108,7 @@ void VulkanImage::Create(VkFormat format, u32 width, u32 height, u32 mip_levels,
     VK_CHECK(vkCreateImageView(device, &view_info, 0, &view));
 }
 
-void VulkanImage::Destroy() {
+void Image::Destroy() {
     VkDevice device = VulkanDevice::handle;
 
     vkDestroyImageView(device, view, 0);
@@ -149,7 +149,7 @@ void IndexBuffer::Create(u32 *data, u32 count, VkCommandPool command_pool) {
 
     VkDevice device = VulkanDevice::handle;
 
-    VkDeviceSize size = (u64)count * sizeof(u32);
+    VkDeviceSize size = u64(count) * sizeof(u32);
 
     VkBuffer staging_buffer;
     VkDeviceMemory staging_memory;

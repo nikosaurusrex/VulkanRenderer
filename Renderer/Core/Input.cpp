@@ -74,7 +74,7 @@ bool Input::IsKeyDown(KeyCode key) {
 	if (locked) {
 		return false;
 	}
-	InputState state = keys[(u16)key];
+	InputState state = keys[u16(key)];
 
 	return state == InputState::Pressed || state == InputState::Held;
 }
@@ -83,7 +83,7 @@ bool Input::IsButtonDown(MouseButton button) {
 	if (locked) {
 		return false;
 	}
-	InputState state = buttons[(u8)button];
+	InputState state = buttons[u8(button)];
 
 	return state == InputState::Pressed || state == InputState::Held;
 }
@@ -92,14 +92,14 @@ InputState Input::GetKey(KeyCode key) {
 	if (locked) {
 		return InputState::None;
 	}
-	return keys[(u16)key];
+	return keys[u16(key)];
 }
 
 InputState Input::GetButton(MouseButton button) {
 	if (locked) {
 		return InputState::None;
 	}
-	return buttons[(u8)button];
+	return buttons[u8(button)];
 }
 
 void Input::Lock() {

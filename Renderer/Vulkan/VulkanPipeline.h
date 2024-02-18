@@ -35,5 +35,22 @@ struct Pipeline {
     void Destroy();
 };
 
+union DescriptorInfo {
+    VkDescriptorBufferInfo buffer;
+    VkDescriptorImageInfo image;
+
+    DescriptorInfo(Image *image) {
+        // TODO
+        assert(0);
+    }
+
+    DescriptorInfo(StorageBuffer *storage_buffer) {
+        buffer.buffer = storage_buffer->buffer;
+        buffer.offset = 0;
+        buffer.range = VK_WHOLE_SIZE;
+    }
+};
+
+VkDescriptorUpdateTemplate CreateDescriptorUpdateTemplate(Pipeline *pipeline, PipelineInfo *info, VkPipelineBindPoint bind_point);
 
 #endif

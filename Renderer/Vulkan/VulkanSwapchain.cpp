@@ -62,6 +62,9 @@ void VulkanSwapchain::Create(bool vsync) {
     swap_chain_info.imageColorSpace = surface_format.colorSpace;
     swap_chain_info.imageExtent = extent;
     swap_chain_info.imageArrayLayers = 1;
+
+    // VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT if we want to render to the swapchain images
+    // VK_IMAGE_USAGE_TRANSFER_DST_BIT if we want to copy the swapchain images to another image (in the case we use a framebuffer)
     swap_chain_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swap_chain_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swap_chain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;

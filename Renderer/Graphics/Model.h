@@ -7,33 +7,33 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-struct DirectionalLight {
+struct alignas(16) DirectionalLight {
     glm::vec4 ambient;
     glm::vec4 diffuse;
     glm::vec3 dir;
     f32 _padding;
 };
 
-struct PointLight {
+struct alignas(16) PointLight {
     glm::vec4 ambient;
     glm::vec4 diffuse;
     glm::vec3 pos;
     f32 _padding;
 };
 
-struct PointLights {
+struct alignas(16) PointLights {
     u32 count;
     glm::vec3 _padding;
     PointLight lights[10];
 };
 
-struct Transformation {
+struct alignas(16) Transformation {
     glm::mat4 projection;
     glm::mat4 view;
     glm::mat4 model;
 };
 
-struct Material {
+struct alignas(16) Material {
     glm::vec4 ambient;
     glm::vec4 diffuse;
     glm::vec4 specular;

@@ -18,7 +18,7 @@ FPSCamera::~FPSCamera() {
 }
 
 void FPSCamera::Calculate(s32 width, s32 height) {
-    aspect = (f32)width / (f32)height;  
+    aspect = f32(width) / f32(height);  
 
     projection = glm::perspective(glm::radians(fov), aspect, near, far);
 
@@ -62,7 +62,7 @@ void FPSCamera::Update(f32 delta) {
 
 	// View bobbing
 	if (moving) {
-		position.y += (f32) sin(glfwGetTime() * 10.0f) * delta * 0.3f;
+		position.y += f32(sin(glfwGetTime() * 10.0f)) * delta * 0.3f;
 	} else {
 		position.y = backup_y;
 	}
@@ -77,8 +77,8 @@ void FPSCamera::Update(f32 delta) {
     }
 	*/
 
-    f32 dx = (f32) Input::delta_mouse_pos.x;
-    f32 dy = (f32) Input::delta_mouse_pos.y;
+    f32 dx = f32(Input::delta_mouse_pos.x);
+    f32 dy = f32(Input::delta_mouse_pos.y);
 
     yaw    += dx * m_yaw * sensitivity;
     pitch  += dy * m_pitch * sensitivity;
@@ -98,7 +98,7 @@ FreeCamera::~FreeCamera() {
 }
 
 void FreeCamera::Calculate(s32 width, s32 height) {
-	f32 aspect = (f32)width / (f32)height;
+	f32 aspect = f32(width) / f32(height);
 	f32 fov = 45.0f;
 	f32 near = 0.1f;
 	f32 far = 100.0f;
@@ -109,8 +109,8 @@ void FreeCamera::Calculate(s32 width, s32 height) {
 }
 
 void FreeCamera::Update(Window *window, f32 delta) {
-    f32 dx = (f32) Input::delta_mouse_pos.x;
-    f32 dy = (f32) Input::delta_mouse_pos.y;
+    f32 dx = f32(Input::delta_mouse_pos.x);
+    f32 dy = f32(Input::delta_mouse_pos.y);
 
 	bool right_click = Input::IsButtonDown(MouseButton::Right);
 	bool shift = Input::IsKeyDown(KeyCode::LeftShift);
@@ -126,7 +126,7 @@ void FreeCamera::Update(Window *window, f32 delta) {
 	bool moved = false;
 
 	if (Input::scroll != 0) {
-		radius -= (f32) Input::scroll;
+		radius -= f32(Input::scroll);
 
 		if (radius < 2) radius = 2;
 		if (radius > 30) radius = 30;
