@@ -1,6 +1,5 @@
 #include "VulkanRenderer.h"
 
-
 VkSurfaceFormatKHR VulkanSwapchain::ChooseFormat() {
     VkPhysicalDevice device = VulkanPhysicalDevice::handle;
 

@@ -2,7 +2,6 @@
 Learning Vulkan
 
 ## Todo
-* Framebuffers
 * ImGui
 * Font Renderer
 * Images
