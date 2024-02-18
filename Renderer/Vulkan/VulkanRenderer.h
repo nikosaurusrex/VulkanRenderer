@@ -23,7 +23,6 @@
 #include "VulkanSwapchain.h"
 #include "VulkanCommandBuffer.h"
 #include "VulkanRenderPass.h"
-#include "VulkanFramebuffer.h"
 #include "VulkanPipeline.h"
 
 u32 FindMemoryType(u32 type_bits, VkMemoryPropertyFlags flags);

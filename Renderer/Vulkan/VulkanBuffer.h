@@ -2,13 +2,15 @@
 #define VULKAN_BUFFER_H
 
 struct Image {
-    VkImage handle;
+    VkImage handle = VK_NULL_HANDLE;
     VkImageView view;
     VkDeviceMemory memory;
 
     void Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSampleCountFlagBits samples, VkImageUsageFlags usage);
     void Destroy();
 };
+
+VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAccessFlags dst_access, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask);
 
 struct StorageBuffer {
     VkBuffer buffer;
@@ -29,6 +31,16 @@ struct IndexBuffer {
     u32 count;
 
     void Create(u32 *data, u32 count, VkCommandPool command_pool);
+    void Destroy();
+};
+
+// Should probably move this
+struct VulkanSwapchain;
+struct RenderImages {
+    Image color_image;
+    Image depth_image;
+    
+    void Create(VulkanSwapchain *swapchain);
     void Destroy();
 };
 

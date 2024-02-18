@@ -19,6 +19,7 @@ struct SceneRenderer {
     VkDescriptorUpdateTemplate descriptor_update_template;
 
     StorageBuffer scene_data_buffer;
+    RenderImages render_images;
 
     SceneRenderer(VulkanSwapchain *swapchain, RenderPass *render_pass);
     ~SceneRenderer();

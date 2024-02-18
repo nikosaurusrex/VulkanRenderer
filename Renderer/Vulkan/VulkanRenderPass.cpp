@@ -3,7 +3,7 @@
 void RenderPass::Create(VulkanSwapchain *swapchain) {
     this->swapchain = swapchain;
 
-    frames_in_flight = u32(swapchain->color_images.size());
+    frames_in_flight = u32(swapchain->images.size());
 
     graphics_command_pool.Create(VulkanDevice::graphics_index);
     graphics_command_buffers.Create(&graphics_command_pool, frames_in_flight);
@@ -20,7 +20,7 @@ void RenderPass::Create(VulkanSwapchain *swapchain) {
 }
 
 void RenderPass::Destroy() {
-    for (u32 i = 0; i < swapchain->color_images.size(); ++i) {
+    for (u32 i = 0; i < swapchain->images.size(); ++i) {
         DestroySemaphore(image_available_semaphores[i]);
         DestroySemaphore(render_finished_semaphores[i]);
         DestroyFence(in_flight_fences[i]);
@@ -30,8 +30,8 @@ void RenderPass::Destroy() {
     graphics_command_pool.Destroy();
 }
 
-VkCommandBuffer RenderPass::BeginFrame() {
-    swapchain->CheckResize();
+VkCommandBuffer RenderPass::BeginFrame(RenderImages *images) {
+    swapchain->CheckResize(images);
 
     VK_CHECK(vkWaitForFences(VulkanDevice::handle, 1, &in_flight_fences[current_frame], VK_TRUE, UINT64_MAX));
 
@@ -83,18 +83,18 @@ void RenderPass::EndFrame() {
     current_frame = (current_frame + 1) % frames_in_flight;
 }
 
-void RenderPass::Begin() {
+void RenderPass::Begin(RenderImages *images) {
     VkCommandBuffer graphics_command_buffer = graphics_command_buffers.buffers[current_frame];
 
     VkRenderingAttachmentInfo color_attachment = { VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
-    color_attachment.imageView = swapchain->color_views.at(current_image);
+    color_attachment.imageView = images->color_image.view;
     color_attachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     color_attachment.clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     VkRenderingAttachmentInfo depth_attachment = { VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO };
-    depth_attachment.imageView = swapchain->depth_image.view;
+    depth_attachment.imageView = images->depth_image.view;
     depth_attachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
     depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -107,34 +107,20 @@ void RenderPass::Begin() {
     rendering_info.pColorAttachments = &color_attachment;
     rendering_info.pDepthAttachment = &depth_attachment;
 
-    VkImageMemoryBarrier2 color_image_barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-    color_image_barrier.srcStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-    color_image_barrier.srcAccessMask = VK_ACCESS_NONE;
-    color_image_barrier.dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-    color_image_barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    color_image_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    color_image_barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_image_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    color_image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    color_image_barrier.image = swapchain->color_images.at(current_image);
-    color_image_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    color_image_barrier.subresourceRange.baseMipLevel = 0;
-    color_image_barrier.subresourceRange.levelCount = 1;
-    color_image_barrier.subresourceRange.baseArrayLayer = 0;
-    color_image_barrier.subresourceRange.layerCount = 1;
-    
-    VkDependencyInfo dependency_info = {};
-    dependency_info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-    dependency_info.pNext = NULL;
-    dependency_info.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    dependency_info.memoryBarrierCount = 0;
-    dependency_info.pMemoryBarriers = NULL;
-    dependency_info.bufferMemoryBarrierCount = 0;
-    dependency_info.pBufferMemoryBarriers = NULL;
-    dependency_info.imageMemoryBarrierCount = 1;
-    dependency_info.pImageMemoryBarriers = &color_image_barrier;
-    
-    vkCmdPipelineBarrier2(graphics_command_buffer, &dependency_info);
+    VkImageMemoryBarrier barriers[2] = {
+        CreateBarrier(
+            images->color_image.handle, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT
+        ),
+        CreateBarrier(
+            images->depth_image.handle, 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_ASPECT_DEPTH_BIT
+        )
+    };
+
+    vkCmdPipelineBarrier(
+        graphics_command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_DEPENDENCY_BY_REGION_BIT,
+        0, 0, 0, 0, ARRAY_SIZE(barriers), barriers
+    );
 
     vkCmdBeginRendering(graphics_command_buffer, &rendering_info);
 
@@ -145,31 +131,53 @@ void RenderPass::Begin() {
     vkCmdSetScissor(graphics_command_buffer, 0, 1, &scissor);
 }
 
-void RenderPass::End() {
+void RenderPass::End(RenderImages *images) {
     VkCommandBuffer graphics_command_buffer = graphics_command_buffers.buffers[current_frame];
 
     vkCmdEndRendering(graphics_command_buffer);
 
-    VkImageMemoryBarrier2 image_barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-    image_barrier.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-    image_barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    image_barrier.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
-    image_barrier.dstAccessMask = VK_ACCESS_NONE;
-    image_barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    image_barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    image_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    image_barrier.image = swapchain->color_images.at(current_image);
-    image_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    image_barrier.subresourceRange.baseMipLevel = 0;
-    image_barrier.subresourceRange.levelCount = 1;
-    image_barrier.subresourceRange.baseArrayLayer = 0;
-    image_barrier.subresourceRange.layerCount = 1;
+    VkImageMemoryBarrier barriers[2] = {
+        CreateBarrier(
+            images->color_image.handle,
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT
+        ),
+        CreateBarrier(
+            swapchain->images[current_image],
+            0, VK_ACCESS_TRANSFER_WRITE_BIT,
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT
+        )
+    };
 
-    VkDependencyInfo dependency_info = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-    dependency_info.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-    dependency_info.imageMemoryBarrierCount = 1;
-    dependency_info.pImageMemoryBarriers = &image_barrier;
-    
-    vkCmdPipelineBarrier2(graphics_command_buffer, &dependency_info);
+    vkCmdPipelineBarrier(
+        graphics_command_buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_DEPENDENCY_BY_REGION_BIT,
+        0, 0, 0, 0, ARRAY_SIZE(barriers), barriers
+    );
+
+    VkImageCopy copy_region = {};
+    copy_region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    copy_region.srcSubresource.layerCount = 1;
+    copy_region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    copy_region.dstSubresource.layerCount = 1;
+    copy_region.extent = { swapchain->extent.width, swapchain->extent.height, 1 };
+
+    vkCmdCopyImage(
+        graphics_command_buffer,
+        images->color_image.handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        swapchain->images[current_image], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1, &copy_region
+    );
+
+    VkImageMemoryBarrier copy_barrier = CreateBarrier(
+        swapchain->images[current_image],
+        VK_ACCESS_TRANSFER_WRITE_BIT, 0,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_ASPECT_COLOR_BIT
+    );
+
+    vkCmdPipelineBarrier(
+        graphics_command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT,
+        0, 0, 0, 0, 1, &copy_barrier
+    );
 }

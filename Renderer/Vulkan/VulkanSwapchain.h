@@ -5,9 +5,8 @@ struct VulkanSwapchain {
     VkSwapchainKHR handle;
     VkFormat format;
     VkExtent2D extent;
-    array<VkImage> color_images;
-    array<VkImageView> color_views;
-    Image depth_image;
+    array<VkImage> images;
+    array<VkImageView> views;
     bool vsync;
     
     VkSurfaceFormatKHR ChooseFormat();
@@ -16,7 +15,7 @@ struct VulkanSwapchain {
     void Create(bool vsync);
     void Destroy();
 
-    void CheckResize();
+    void CheckResize(RenderImages *images);
 };
 
 #endif

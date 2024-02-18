@@ -15,14 +15,14 @@ struct RenderPass {
     // need this because current_image is overwritten by vkAcquireNextImageKHR
     u32 current_frame = 0;
 
-    VkCommandBuffer BeginFrame();
-    void EndFrame();
-
     void Create(VulkanSwapchain *swapchain);
     void Destroy();
 
-    void Begin();
-    void End();
+    VkCommandBuffer BeginFrame(RenderImages *images);
+    void EndFrame();
+
+    void Begin(RenderImages *images);
+    void End(RenderImages *images);
 };
 
 #endif

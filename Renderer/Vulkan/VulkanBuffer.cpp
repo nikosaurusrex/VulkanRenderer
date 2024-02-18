@@ -116,6 +116,24 @@ void Image::Destroy() {
     vkFreeMemory(device, memory, 0);
 }
 
+VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAccessFlags dst_access, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask) {
+
+    VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
+    barrier.srcAccessMask = src_access;
+    barrier.dstAccessMask = dst_access;
+    barrier.oldLayout = old_layout;
+    barrier.newLayout = new_layout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = aspect_mask;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    return barrier;
+}
 
 void StorageBuffer::Create(void *data, VkDeviceSize size) {
     Create(size);
@@ -174,4 +192,29 @@ void IndexBuffer::Destroy() {
     
     vkDestroyBuffer(device, buffer, 0);
     vkFreeMemory(device, memory, 0);
+}
+
+void RenderImages::Create(VulkanSwapchain *swapchain) {
+    color_image.Create(
+        swapchain->format,
+        swapchain->extent.width,
+        swapchain->extent.height,
+        1,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
+    );
+
+    depth_image.Create(
+        VK_FORMAT_D32_SFLOAT,
+        swapchain->extent.width,
+        swapchain->extent.height,
+        1,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
+}
+
+void RenderImages::Destroy() {
+    color_image.Destroy();
+    depth_image.Destroy();
 }

@@ -65,7 +65,7 @@ void VulkanSwapchain::Create(bool vsync) {
 
     // VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT if we want to render to the swapchain images
     // VK_IMAGE_USAGE_TRANSFER_DST_BIT if we want to copy the swapchain images to another image (in the case we use a framebuffer)
-    swap_chain_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    swap_chain_info.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     swap_chain_info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swap_chain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swap_chain_info.presentMode = ChooseSwapPresentMode(vsync);
@@ -85,13 +85,13 @@ void VulkanSwapchain::Create(bool vsync) {
     u32 image_count;
     VK_CHECK(vkGetSwapchainImagesKHR(VulkanDevice::handle, handle, &image_count, 0));
 
-    color_images.resize(image_count);
-    color_views.resize(image_count);
-    VK_CHECK(vkGetSwapchainImagesKHR(VulkanDevice::handle, handle, &image_count, color_images.data()));
+    images.resize(image_count);
+    views.resize(image_count);
+    VK_CHECK(vkGetSwapchainImagesKHR(VulkanDevice::handle, handle, &image_count, images.data()));
 
     for (u32 i = 0; i < image_count; ++i) {
         VkImageViewCreateInfo view_info = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-        view_info.image = color_images[i];
+        view_info.image = images[i];
         view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
         view_info.format = format;
         view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -100,34 +100,33 @@ void VulkanSwapchain::Create(bool vsync) {
         view_info.subresourceRange.baseArrayLayer = 0;
         view_info.subresourceRange.layerCount = 1;
 
-        VK_CHECK(vkCreateImageView(VulkanDevice::handle, &view_info, 0, &color_views[i]));
+        VK_CHECK(vkCreateImageView(VulkanDevice::handle, &view_info, 0, &views[i]));
     }
-
-    depth_image.Create(
-        VK_FORMAT_D32_SFLOAT, extent.width, extent.height, 1,
-        VulkanPhysicalDevice::msaa_samples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-    );
 }
 
 void VulkanSwapchain::Destroy() {
     VkDevice device = VulkanDevice::handle;
 
-    for (VkImageView view : color_views) {
+    for (VkImageView view : views) {
         vkDestroyImageView(device, view, 0);
     }
-
-    depth_image.Destroy();
 
     vkDestroySwapchainKHR(VulkanDevice::handle, handle, 0);
 }
 
-void VulkanSwapchain::CheckResize() {
+void VulkanSwapchain::CheckResize(RenderImages *images) {
     VkSurfaceCapabilitiesKHR capabilities;
     VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanPhysicalDevice::handle, VulkanInstance::surface, &capabilities));
+
+    if (!images->color_image.handle) {
+        images->Create(this);
+    }
 
     if (capabilities.currentExtent.width != extent.width || capabilities.currentExtent.height != extent.height) {
         Destroy();
         Create(vsync);
+        images->Destroy();
+        images->Create(this);
 
         extent = capabilities.currentExtent;
 

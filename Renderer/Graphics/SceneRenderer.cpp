@@ -31,21 +31,23 @@ SceneRenderer::~SceneRenderer() {
 
     vkDestroyDescriptorUpdateTemplate(VulkanDevice::handle, descriptor_update_template, 0);
 
+    render_images.Destroy();
+
     scene_data_buffer.Destroy();
     pipeline.Destroy();
 }
 
 void SceneRenderer::Begin() {
-    cmd_buf = render_pass->BeginFrame();
+    cmd_buf = render_pass->BeginFrame(&render_images);
 
     RenderStats::Begin(cmd_buf);
 
-    render_pass->Begin();
+    render_pass->Begin(&render_images);
     vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
 }
 
 void SceneRenderer::End() {
-    render_pass->End();
+    render_pass->End(&render_images);
 
     RenderStats::EndGPU(cmd_buf);
 
