@@ -1,6 +1,6 @@
-#version 330 core
+#version 450
 
-layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+layout (location = 0) in vec4 vertex;
 
 out vec2 uv_coords;
 
