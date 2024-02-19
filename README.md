@@ -1,6 +1,9 @@
 # Vulkan Renderer
 Learning Vulkan
 
+## Setup
+On Windows: set library path in premake5.lua
+
 ## Todo
 * ImGui
 * Font Renderer
@@ -12,7 +15,6 @@ Learning Vulkan
 * PBR
 * Mesh Shaders?
 * Raytracing?
-* Windows Support
 * MacOS Support
 * Assets
 

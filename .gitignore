@@ -10,3 +10,9 @@ Makefile
 imgui.ini
 
 .vscode/**
+.vs/**
+*.sln
+*.vcx*
+
+vendor/glfw/**
+vendor/assimp/**

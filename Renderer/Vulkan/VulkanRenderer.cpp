@@ -64,11 +64,11 @@ void RenderStats::Begin(VkCommandBuffer cmd_buf) {
     cpu_frame_time_begin = glfwGetTime() * 1000;
 
     vkCmdResetQueryPool(cmd_buf, query_pool, 0, 2);
-    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, 0);
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, query_pool, 0);
 }
 
 void RenderStats::EndGPU(VkCommandBuffer cmd_buf) {
-    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, 1);
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, query_pool, 1);
 }
 
 void RenderStats::EndCPU() {

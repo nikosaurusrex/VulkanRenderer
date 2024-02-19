@@ -50,24 +50,41 @@ project "VulkanRenderer"
             "GLFW_INCLUDE_NONE"
         }
 
-        links {
-            "glfw",
-            "vulkan",
-            "assimp"
-        }
-
         libdirs {
             "%{VULKAN_SDK}/lib"
         }
 
         filter "system:windows"
             postbuildcommands {
-                "./scripts/compile_shaders.cmd"
+                "call ./scripts/compile_shaders.cmd"
+            }
+
+            links {
+                "opengl32.lib",
+                "assimp.lib",
+                "glfw3.lib",
+                "vulkan-1.lib"
+            }
+
+            libdirs {
+                "vendor/assimp/libs",
+                "vendor/glfw/libs"
+            }
+
+            includedirs {
+                "vendor/assimp/include",
+                "vendor/glfw/include"
             }
 
         filter "system:linux"
             postbuildcommands {
                 "bash ./scripts/compile_shaders.sh"
+            }
+
+            links {
+                "glfw",
+                "vulkan",
+                "assimp"
             }
 
         filter "configurations:Debug"

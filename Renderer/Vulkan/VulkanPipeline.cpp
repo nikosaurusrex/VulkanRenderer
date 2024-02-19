@@ -185,7 +185,7 @@ VkDescriptorUpdateTemplate CreateDescriptorUpdateTemplate(Pipeline *pipeline, Pi
 
     update_template_info.descriptorUpdateEntryCount = u32(entries.size());
     update_template_info.pDescriptorUpdateEntries = entries.data();
-    update_template_info.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET;
+    update_template_info.templateType = VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR;
     update_template_info.descriptorSetLayout = pipeline->descriptor_set_layout;
     update_template_info.pipelineBindPoint = bind_point;
     update_template_info.pipelineLayout = pipeline->layout;

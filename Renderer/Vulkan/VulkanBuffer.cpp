@@ -210,7 +210,7 @@ void RenderImages::Create(VulkanSwapchain *swapchain) {
         swapchain->extent.height,
         1,
         VK_SAMPLE_COUNT_1_BIT,
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
     );
 }
 
