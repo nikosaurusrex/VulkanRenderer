@@ -5,7 +5,7 @@ Learning Vulkan
 On Windows: set library path in premake5.lua
 
 ## Todo
-* ImGui
+* Vulkan Memory Allocator
 * Font Renderer
 * Images
 * Shadows
@@ -15,6 +15,7 @@ On Windows: set library path in premake5.lua
 * PBR
 * Mesh Shaders?
 * Raytracing?
+* ImGui?
 * MacOS Support
 * Assets
 
