@@ -65,7 +65,7 @@ Model *ModelImporter::Load(const char *path, VkCommandPool command_pool) {
         }
 
 		model->materials_buffer = new StorageBuffer();
-		model->materials_buffer->Create(materials, scene->mNumMaterials * sizeof(Material));
+		model->materials_buffer->Create(materials, scene->mNumMaterials * sizeof(Material), command_pool);
 
 		delete[] materials;
     }
@@ -105,7 +105,7 @@ Model *ModelImporter::Load(const char *path, VkCommandPool command_pool) {
 		}
 
         StorageBuffer *storage_buffer = new StorageBuffer();
-        storage_buffer->Create((void *) &vertices[0], ai_mesh->mNumVertices * sizeof(Vertex));
+        storage_buffer->Create((void *) &vertices[0], ai_mesh->mNumVertices * sizeof(Vertex), command_pool);
 
         IndexBuffer *index_buffer = new IndexBuffer();
         index_buffer->Create((u32 *) &indices[0], num_indices, command_pool);

@@ -14,20 +14,20 @@ VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAc
 
 struct StorageBuffer {
     VkBuffer buffer;
-    VkDeviceMemory memory;
-    void *mapped;
+    VmaAllocation allocation;
+    void *mapped = 0;
     VkDeviceSize size;
 
-    void Create(void *data, VkDeviceSize size);
+    void Create(void *data, VkDeviceSize size, VkCommandPool command_pool);
     void Create(VkDeviceSize size);
     void Destroy();
 
-    void SetData(void *data, VkDeviceSize size);
+    void SetData(void *data, VkDeviceSize size, VkCommandPool command_pool);
 };
 
 struct IndexBuffer {
     VkBuffer buffer;
-    VkDeviceMemory memory;
+    VmaAllocation allocation;
     u32 count;
 
     void Create(u32 *data, u32 count, VkCommandPool command_pool);

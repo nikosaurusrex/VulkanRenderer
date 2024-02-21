@@ -7,6 +7,8 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 
+#include <vk_mem_alloc.h>
+
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
@@ -19,6 +21,7 @@
 
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
+#include "VulkanAllocator.h"
 #include "VulkanBuffer.h"
 #include "VulkanSwapchain.h"
 #include "VulkanCommandBuffer.h"

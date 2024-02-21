@@ -107,6 +107,8 @@ int main() {
     VulkanPhysicalDevice::Pick(&context);
     VulkanDevice::Create(&context);
 
+    CreateVulkanAllocator();
+
     VulkanSwapchain swapchain;
     swapchain.Create(true);
 
@@ -142,6 +144,9 @@ int main() {
 
 	scene_data.point_lights[0] = point_light;
 	scene_data.num_point_lights = 0;
+    scene_data.projection = camera.projection;
+    scene_data.view = camera.view;
+    renderer->SetSceneData(&scene_data);
 
 	bool show_editor = false;
 	bool show_render_stats = false;
@@ -199,16 +204,17 @@ int main() {
 		delta_time = f32(current_time - last_time);
 		last_time = current_time;
 
-        camera.Update(engine.window, delta_time);
+        bool camera_moved = camera.Update(engine.window, delta_time);
 		Input::Update(engine.window);
         engine.Update();
 
-		scene_data.projection = camera.projection;
-		scene_data.view = camera.view;
-
 		renderer->Begin();
 
-		renderer->SetSceneData(&scene_data);
+        if (camera_moved) {
+            scene_data.projection = camera.projection;
+            scene_data.view = camera.view;
+		    renderer->SetSceneData(&scene_data);
+        }
 		renderer->RenderModel(model_well);
 
 		model_waterwheel->transformation = TranslateRotateScale(glm::vec3(2.0f, 1.0f, -2.0f), glm::vec3(waterwheel_angle, 0.0f, 0.0f), glm::vec3(0.5f));
@@ -246,6 +252,9 @@ int main() {
     render_pass.Destroy();
 
     swapchain.Destroy();
+
+    DestroyVulkanAllocator();
+
     VulkanDevice::Destroy();
     VulkanInstance::Destroy();
 

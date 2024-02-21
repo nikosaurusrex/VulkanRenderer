@@ -108,7 +108,7 @@ void FreeCamera::Calculate(s32 width, s32 height) {
 	UpdateView();
 }
 
-void FreeCamera::Update(Window *window, f32 delta) {
+bool FreeCamera::Update(Window *window, f32 delta) {
     f32 dx = f32(Input::delta_mouse_pos.x);
     f32 dy = f32(Input::delta_mouse_pos.y);
 
@@ -158,6 +158,8 @@ void FreeCamera::Update(Window *window, f32 delta) {
 	if (moved) {
 		UpdateView();
 	}
+
+    return moved;
 }
 
 void FreeCamera::UpdateView() {

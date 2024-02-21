@@ -5,7 +5,6 @@ Learning Vulkan
 On Windows: set library path in premake5.lua
 
 ## Todo
-* Vulkan Memory Allocator
 * Font Renderer
 * Images
 * Shadows
@@ -26,6 +25,7 @@ On Windows: set library path in premake5.lua
 * GLM
 * stb_image.h
 * miniaudio.h
+* VulkanMemoryAllocator
 
 ## Assets
 Not possible to include right now because of copyright - will be changed

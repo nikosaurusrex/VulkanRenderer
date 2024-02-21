@@ -59,7 +59,7 @@ void SceneRenderer::End() {
 void SceneRenderer::SetSceneData(SceneData *scene_data) {
     u32 size = 3 * sizeof(glm::mat4) + 16 + scene_data->num_point_lights * sizeof(PointLight);
     
-    scene_data_buffer.SetData(scene_data, size);
+    scene_data_buffer.SetData(scene_data, size, render_pass->graphics_command_pool.handle);
 }
 
 void SceneRenderer::RenderModel(Model *model) {

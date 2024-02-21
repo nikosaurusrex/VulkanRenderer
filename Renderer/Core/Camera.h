@@ -46,7 +46,7 @@ struct FreeCamera {
 	~FreeCamera();
 
 	void Calculate(s32 width, s32 height);
-	void Update(Window *window, f32 delta);
+	bool Update(Window *window, f32 delta);
 	void UpdateView();
 };
 

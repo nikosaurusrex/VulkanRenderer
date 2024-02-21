@@ -1,6 +1,6 @@
 #include "VulkanRenderer.h"
 
-static void CreateVulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer *buffer, VkDeviceMemory *memory) {
+static VmaAllocation CreateVulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage mem_usage, VkBuffer *buffer, void **mapped) {
     VkDevice device = VulkanDevice::handle;
     
     VkBufferCreateInfo info = {};
@@ -9,23 +9,7 @@ static void CreateVulkanBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMe
     info.usage = usage;
     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(device, &info, 0, buffer) != VK_SUCCESS) {
-        LogFatal("Failed to create vertex buffer");
-    }
-
-    VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(device, *buffer, &mem_reqs);
-
-    VkMemoryAllocateInfo alloc_info = {};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = mem_reqs.size;
-    alloc_info.memoryTypeIndex = FindMemoryType(mem_reqs.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(device, &alloc_info, 0, memory) != VK_SUCCESS) {
-        LogFatal("Failed to allocate vertex buffer memory");
-    }
-
-    vkBindBufferMemory(device, *buffer, *memory, 0);
+    return AllocateVulkanBuffer(info, mem_usage, buffer, mapped);
 }
 
 static void CopyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size, VkCommandPool command_pool) {
@@ -86,7 +70,6 @@ void Image::Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSam
     VkMemoryRequirements memory_requirements;
     vkGetImageMemoryRequirements(device, handle, &memory_requirements);
 
-
     VkMemoryAllocateInfo allocate_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
     allocate_info.allocationSize = memory_requirements.size;
     allocate_info.memoryTypeIndex = FindMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -117,7 +100,6 @@ void Image::Destroy() {
 }
 
 VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAccessFlags dst_access, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask) {
-
     VkImageMemoryBarrier barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER };
     barrier.srcAccessMask = src_access;
     barrier.dstAccessMask = dst_access;
@@ -135,63 +117,57 @@ VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAc
     return barrier;
 }
 
-void StorageBuffer::Create(void *data, VkDeviceSize size) {
+void StorageBuffer::Create(void *data, VkDeviceSize size, VkCommandPool command_pool) {
     Create(size);
-    SetData(data, size);
+    SetData(data, size, command_pool);
 }
 
 void StorageBuffer::Create(VkDeviceSize size) {
     this->size = size;
 
-    VkDevice device = VulkanDevice::handle;
-
-    CreateVulkanBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &buffer, &memory);
-
-    vkMapMemory(device, memory, 0, size, 0, &mapped);
+    allocation = CreateVulkanBuffer(
+        size,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        VMA_MEMORY_USAGE_GPU_ONLY,
+        &buffer, 0
+    );
 }
 
 void StorageBuffer::Destroy() {
-    VkDevice device = VulkanDevice::handle;
-
-    vkUnmapMemory(device, memory);
-    vkDestroyBuffer(device, buffer, 0);
-    vkFreeMemory(device, memory, 0);
+    FreeVulkanBufferNoUnmap(buffer, allocation);
 }
 
-void StorageBuffer::SetData(void *data, VkDeviceSize size) {
+void StorageBuffer::SetData(void *data, VkDeviceSize size, VkCommandPool command_pool) {
+    VkBuffer staging_buffer;
+    void *mapped;
+    VmaAllocation staging_allocation = CreateVulkanBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &staging_buffer, &mapped);
+
     memcpy(mapped, data, size);
+    
+    CopyBuffer(staging_buffer, buffer, size, command_pool);
+
+    FreeVulkanBuffer(staging_buffer, staging_allocation);
 }
 
 void IndexBuffer::Create(u32 *data, u32 count, VkCommandPool command_pool) {
     this->count = count;
 
-    VkDevice device = VulkanDevice::handle;
-
     VkDeviceSize size = u64(count) * sizeof(u32);
 
     VkBuffer staging_buffer;
-    VkDeviceMemory staging_memory;
-
-    CreateVulkanBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_memory);
-
     void *mapped;
-    vkMapMemory(device, staging_memory, 0, size, 0, &mapped);
+    VmaAllocation staging_allocation = CreateVulkanBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU, &staging_buffer, &mapped);
+
     memcpy(mapped, data, size);
-    vkUnmapMemory(device, staging_memory);
-
-    CreateVulkanBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &buffer, &memory);
-
+    
+    CreateVulkanBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, &buffer, 0);
     CopyBuffer(staging_buffer, buffer, size, command_pool);
 
-    vkDestroyBuffer(device, staging_buffer, 0);
-    vkFreeMemory(device, staging_memory, 0);
+    FreeVulkanBuffer(staging_buffer, staging_allocation);
 }
 
 void IndexBuffer::Destroy() {
-    VkDevice device = VulkanDevice::handle;
-    
-    vkDestroyBuffer(device, buffer, 0);
-    vkFreeMemory(device, memory, 0);
+    FreeVulkanBufferNoUnmap(buffer, allocation);
 }
 
 void RenderImages::Create(VulkanSwapchain *swapchain) {
