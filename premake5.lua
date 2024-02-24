@@ -16,6 +16,22 @@ workspace "VulkanRenderer"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
+glfw3_path = ""
+assimp_path = ""
+shell_path = ""
+
+if os.host() == "linux" then
+    shell_path = os.getenv("SHELL") or "/bin/sh"
+elseif os.host() == "macosx" then
+    glfw3_path = io.popen('brew --prefix glfw'):read('*a')
+    glfw3_path = glfw3_path:gsub('%s+$', '')
+
+    assimp_path = io.popen('brew --prefix assimp'):read('*a')
+    assimp_path = assimp_path:gsub('%s+$', '')
+
+    shell_path = os.getenv("SHELL") or "/bin/sh"
+end
+
 project "VulkanRenderer"
     kind "ConsoleApp"
         language "C++"
@@ -62,24 +78,22 @@ project "VulkanRenderer"
             links {
                 "assimp.lib",
                 "glfw3.lib",
+                "freetype.lib",
                 "vulkan-1.lib"
             }
 
             libdirs {
                 "vendor/assimp/libs",
-                "vendor/glfw/libs"
+                "vendor/glfw/libs",
+                "vendor/freetype2/libs"
             }
 
             includedirs {
                 "vendor/assimp/include",
-                "vendor/glfw/include"
+                "vendor/glfw/include",
+                "vendor/freetype2/include",
+                "vendor/freetype2/include/freetype2"
             }
-
-        if os.host() == "linux" then
-            shell_path = os.getenv("SHELL") or "/bin/sh"
-            glfw3_path = ""
-            assimp_path = ""
-        end
 
         filter "system:Linux"
             postbuildcommands {
@@ -101,16 +115,6 @@ project "VulkanRenderer"
             links {
                 "vulkan"
             }
-
-        if os.host() == "macosx" then
-            glfw3_path = io.popen('brew --prefix glfw'):read('*a')
-            glfw3_path = glfw3_path:gsub('%s+$', '')
-
-            assimp_path = io.popen('brew --prefix assimp'):read('*a')
-            assimp_path = assimp_path:gsub('%s+$', '')
-
-            shell_path = os.getenv("SHELL") or "/bin/sh"
-        end
 
         filter "system:Mac"
             postbuildcommands {

@@ -16,3 +16,4 @@ imgui.ini
 
 vendor/glfw/**
 vendor/assimp/**
+vendor/freetype2/**
