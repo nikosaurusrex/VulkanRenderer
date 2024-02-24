@@ -54,13 +54,12 @@ project "VulkanRenderer"
             "%{VULKAN_SDK}/lib"
         }
 
-        filter "system:windows"
+        filter "system:Windows"
             postbuildcommands {
                 "call ./scripts/compile_shaders.cmd"
             }
 
             links {
-                "opengl32.lib",
                 "assimp.lib",
                 "glfw3.lib",
                 "vulkan-1.lib"
@@ -76,28 +75,44 @@ project "VulkanRenderer"
                 "vendor/glfw/include"
             }
 
-        filter "system:linux"
-            local shell_path = os.getenv("SHELL") or "/bin/sh"
+        if os.host() == "linux" then
+            shell_path = os.getenv("SHELL") or "/bin/sh"
+            glfw3_path = ""
+            assimp_path = ""
+        end
 
+        filter "system:Linux"
             postbuildcommands {
                 shell_path .. " ./scripts/compile_shaders.sh"
             }
 
-            links {
-                "glfw",
-                "vulkan",
-                "assimp"
+            linkoptions {
+                "`pkg-config --static --libs glfw3`",
+                "`pkg-config --static --libs assimp`",
+                "`pkg-config --static --libs freetype2`"
             }
 
-        filter "system:macosx"
-            local glfw3_path = io.popen('brew --prefix glfw'):read('*a')
+            buildoptions {
+                "`pkg-config --cflags glfw3`",
+                "`pkg-config --cflags assimp`",
+                "`pkg-config --cflags freetype2`"
+            }
+
+            links {
+                "vulkan"
+            }
+
+        if os.host() == "macosx" then
+            glfw3_path = io.popen('brew --prefix glfw'):read('*a')
             glfw3_path = glfw3_path:gsub('%s+$', '')
 
-            local assimp_path = io.popen('brew --prefix assimp'):read('*a')
+            assimp_path = io.popen('brew --prefix assimp'):read('*a')
             assimp_path = assimp_path:gsub('%s+$', '')
 
-            local shell_path = os.getenv("SHELL") or "/bin/sh"
+            shell_path = os.getenv("SHELL") or "/bin/sh"
+        end
 
+        filter "system:Mac"
             postbuildcommands {
                 shell_path .. " ./scripts/compile_shaders.sh"
             }
