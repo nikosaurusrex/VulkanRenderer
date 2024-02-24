@@ -77,8 +77,39 @@ project "VulkanRenderer"
             }
 
         filter "system:linux"
+            local shell_path = os.getenv("SHELL") or "/bin/sh"
+
             postbuildcommands {
-                "bash ./scripts/compile_shaders.sh"
+                shell_path .. " ./scripts/compile_shaders.sh"
+            }
+
+            links {
+                "glfw",
+                "vulkan",
+                "assimp"
+            }
+
+        filter "system:macosx"
+            local glfw3_path = io.popen('brew --prefix glfw'):read('*a')
+            glfw3_path = glfw3_path:gsub('%s+$', '')
+
+            local assimp_path = io.popen('brew --prefix assimp'):read('*a')
+            assimp_path = assimp_path:gsub('%s+$', '')
+
+            local shell_path = os.getenv("SHELL") or "/bin/sh"
+
+            postbuildcommands {
+                shell_path .. " ./scripts/compile_shaders.sh"
+            }
+
+            libdirs {
+                glfw3_path .. "/lib",
+                assimp_path .. "/lib"
+            }
+
+            includedirs {
+                glfw3_path .. "/include",
+                assimp_path .. "/include"
             }
 
             links {
