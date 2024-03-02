@@ -7,7 +7,9 @@
 #include <glm/glm.hpp>
 
 #include "Common.h"
+#include "Vulkan/VulkanRenderer.h"
 
+#if 0
 struct Character {
     u32 texture_id;
     glm::ivec2 size;
@@ -37,5 +39,6 @@ struct FontRenderer {
 	void Resize(u32 width, u32 height);
 	void Render(string text, f32 x, f32 y, f32 scale, glm::vec3 color);
 };
+#endif
 
 #endif

@@ -39,9 +39,10 @@ union DescriptorInfo {
     VkDescriptorBufferInfo buffer;
     VkDescriptorImageInfo image;
 
-    DescriptorInfo(Image *image) {
-        // TODO
-        assert(0);
+    DescriptorInfo(Image *img) {
+        image.sampler = img->sampler;
+        image.imageView = img->view;
+        image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
     DescriptorInfo(StorageBuffer *storage_buffer) {

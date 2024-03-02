@@ -8,6 +8,7 @@
 
 #include "Vulkan/VulkanRenderer.h"
 #include "Graphics/Model.h"
+#include "Graphics/MasterRenderer.h"
 #include "Graphics/SceneRenderer.h"
 
 #define GLM_FORCE_RADIANS
@@ -115,7 +116,8 @@ int main() {
     RenderPass render_pass;
     render_pass.Create(&swapchain);
 
-	SceneRenderer *renderer = new SceneRenderer(&swapchain, &render_pass);
+    MasterRenderer *master_renderer = new MasterRenderer(&render_pass);
+	SceneRenderer *scene_renderer = new SceneRenderer(&swapchain, &render_pass);
 
 	Model *model_wall_door = ModelImporter::Load("Renderer/Assets/Models/village/Stucco_Doorway_Wide_Tall.obj", render_pass.graphics_command_pool.handle);
 	Model *model_door = ModelImporter::Load("Renderer/Assets/Models/village/Wall_Prop_Door_Ornate.obj", render_pass.graphics_command_pool.handle);
@@ -146,7 +148,7 @@ int main() {
 	scene_data.num_point_lights = 0;
     scene_data.projection = camera.projection;
     scene_data.view = camera.view;
-    renderer->SetSceneData(&scene_data);
+    scene_renderer->SetSceneData(&scene_data);
 
 	bool show_editor = false;
 	bool show_render_stats = false;
@@ -208,33 +210,35 @@ int main() {
 		Input::Update(engine.window);
         engine.Update();
 
-		renderer->Begin();
+        VkCommandBuffer cmd_buf = master_renderer->Begin();
+		scene_renderer->Begin(cmd_buf);
 
         if (camera_moved) {
             scene_data.projection = camera.projection;
             scene_data.view = camera.view;
-		    renderer->SetSceneData(&scene_data);
+		    scene_renderer->SetSceneData(&scene_data);
         }
-		renderer->RenderModel(model_well);
+		scene_renderer->RenderModel(model_well);
 
 		model_waterwheel->transformation = TranslateRotateScale(glm::vec3(2.0f, 1.0f, -2.0f), glm::vec3(waterwheel_angle, 0.0f, 0.0f), glm::vec3(0.5f));
-		renderer->RenderModel(model_waterwheel);
+		scene_renderer->RenderModel(model_waterwheel);
         waterwheel_angle += 10.0f * delta_time;
 
         glm::mat4 wtr = TranslateRotate(glm::vec3(0.0f, 0.0f, 2.0f), glm::vec3(0.0f, -90.0f, 0.0f));
 		model_wall_window->transformation = wtr;
-		renderer->RenderModel(model_wall_window);
+		scene_renderer->RenderModel(model_wall_window);
 
         for (int x = 1; x < 5; x++) {
             for (int z = -3; z < 7; z++) {
 				model_floor->transformation = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z));
-				renderer->RenderModel(model_floor);
+				scene_renderer->RenderModel(model_floor);
             }
         }
 
-        door.Render(renderer, delta_time);
+        door.Render(scene_renderer, delta_time);
 
-		renderer->End();
+		scene_renderer->End();
+        master_renderer->End();
 
 		RenderStats::SetTitle(engine.window->handle);
     }
@@ -247,7 +251,8 @@ int main() {
 	delete model_waterwheel;
 	delete model_well;
 	delete model_wall_window;
-	delete renderer;
+	delete scene_renderer;
+    delete master_renderer;
 
     render_pass.Destroy();
 

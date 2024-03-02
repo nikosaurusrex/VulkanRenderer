@@ -3,10 +3,12 @@
 
 struct Image {
     VkImage handle = VK_NULL_HANDLE;
+    VkSampler sampler = VK_NULL_HANDLE;
     VkImageView view;
     VmaAllocation allocation;
 
     void Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSampleCountFlagBits samples, VkImageUsageFlags usage);
+    void Create(const char *filename, VkCommandPool command_pool);
     void Destroy();
 };
 

@@ -15,16 +15,15 @@ struct alignas(16) SceneData {
 struct SceneRenderer {
     RenderPass *render_pass;
     Pipeline pipeline;
-    VkCommandBuffer cmd_buf;
     VkDescriptorUpdateTemplate descriptor_update_template;
 
     StorageBuffer scene_data_buffer;
-    RenderImages render_images;
+    VkCommandBuffer cmd_buf;
 
     SceneRenderer(VulkanSwapchain *swapchain, RenderPass *render_pass);
     ~SceneRenderer();
 
-    void Begin();
+    void Begin(VkCommandBuffer cmd_buf);
     void End();
 
     void SetSceneData(SceneData *scene_data);

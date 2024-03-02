@@ -39,3 +39,9 @@ set library paths in premake5.lua
 
 ## Assets
 Not possible to include right now because of copyright concerns - will be changed
+
+
+## Credits
+Helpful resources and tutorials
+* [VulkanTutorial](https://vulkan-tutorial.com/)
+* [Niagara Youtube Series by Arseny Kapoulkine](https://www.youtube.com/watch?v=BR2my8OE1Sc&t=7727s&ab_channel=ArsenyKapoulkine)

@@ -17,43 +17,26 @@ SceneRenderer::SceneRenderer(VulkanSwapchain *swapchain, RenderPass *render_pass
 
     scene_data_buffer.Create(sizeof(SceneData));
 
-    // TODO: check if ok
     vertex_shader.Destroy();
     fragment_shader.Destroy();
 
     descriptor_update_template = CreateDescriptorUpdateTemplate(&pipeline, &pipeline_info, VK_PIPELINE_BIND_POINT_GRAPHICS);
-
-    RenderStats::Create();
 }
 
 SceneRenderer::~SceneRenderer() {
-    RenderStats::Destroy();
-
     vkDestroyDescriptorUpdateTemplate(VulkanDevice::handle, descriptor_update_template, 0);
-
-    render_images.Destroy();
 
     scene_data_buffer.Destroy();
     pipeline.Destroy();
 }
 
-void SceneRenderer::Begin() {
-    cmd_buf = render_pass->BeginFrame(&render_images);
+void SceneRenderer::Begin(VkCommandBuffer cmd_buf) {
+    this->cmd_buf = cmd_buf;
 
-    RenderStats::Begin(cmd_buf);
-
-    render_pass->Begin(&render_images);
     vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
 }
 
 void SceneRenderer::End() {
-    render_pass->End(&render_images);
-
-    RenderStats::EndGPU(cmd_buf);
-
-    render_pass->EndFrame();
-
-    RenderStats::EndCPU();
 }
 
 void SceneRenderer::SetSceneData(SceneData *scene_data) {

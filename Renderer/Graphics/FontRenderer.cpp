@@ -2,6 +2,7 @@
 
 #include "glm/gtc/matrix_transform.hpp"
 
+#if 0
 Font::Font(const char *font, u32 font_size) {
     if (FT_Init_FreeType(&ft)) {
         LogFatal("Failed to initialize font system");
@@ -150,4 +151,4 @@ void FontRenderer::Render(string text, f32 x, f32 y, f32 scale, glm::vec3 color)
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0); */
 }
-
+#endif
