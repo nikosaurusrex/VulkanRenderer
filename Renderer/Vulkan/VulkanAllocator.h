@@ -8,4 +8,7 @@ VmaAllocation AllocateVulkanBuffer(VkBufferCreateInfo buffer_create_info, VmaMem
 void FreeVulkanBuffer(VkBuffer buffer, VmaAllocation allocation);
 void FreeVulkanBufferNoUnmap(VkBuffer buffer, VmaAllocation allocation);
 
+VmaAllocation AllocateVulkanImage(VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VkImage *image);
+void FreeVulkanImage(VkImage image, VmaAllocation allocation);
+
 #endif

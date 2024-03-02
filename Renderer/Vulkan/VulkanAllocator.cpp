@@ -39,3 +39,17 @@ void FreeVulkanBuffer(VkBuffer buffer, VmaAllocation allocation) {
 void FreeVulkanBufferNoUnmap(VkBuffer buffer, VmaAllocation allocation) {
     vmaDestroyBuffer(allocator, buffer, allocation);
 }
+
+VmaAllocation AllocateVulkanImage(VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VkImage *image) {
+    VmaAllocationCreateInfo alloc_create_info = {};
+    alloc_create_info.usage = usage;
+
+    VmaAllocation allocation;
+    vmaCreateImage(allocator, &image_create_info, &alloc_create_info, image, &allocation, 0);
+
+    return allocation;
+}
+
+void FreeVulkanImage(VkImage image, VmaAllocation allocation) {
+    vmaDestroyImage(allocator, image, allocation);
+}

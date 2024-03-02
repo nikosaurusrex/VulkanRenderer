@@ -4,7 +4,7 @@
 struct Image {
     VkImage handle = VK_NULL_HANDLE;
     VkImageView view;
-    VkDeviceMemory memory;
+    VmaAllocation allocation;
 
     void Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSampleCountFlagBits samples, VkImageUsageFlags usage);
     void Destroy();

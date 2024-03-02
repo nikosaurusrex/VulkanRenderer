@@ -64,18 +64,7 @@ void Image::Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSam
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     image_info.usage = usage;
 
-    VkDevice device = VulkanDevice::handle;
-    VK_CHECK(vkCreateImage(device, &image_info, 0, &handle));
-
-    VkMemoryRequirements memory_requirements;
-    vkGetImageMemoryRequirements(device, handle, &memory_requirements);
-
-    VkMemoryAllocateInfo allocate_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-    allocate_info.allocationSize = memory_requirements.size;
-    allocate_info.memoryTypeIndex = FindMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    VK_CHECK(vkAllocateMemory(device, &allocate_info, 0, &memory));
-    VK_CHECK(vkBindImageMemory(device, handle, memory, 0));
+    allocation = AllocateVulkanImage(image_info, VMA_MEMORY_USAGE_GPU_ONLY, &handle);
 
     VkImageAspectFlags aspect_mask = (format == VK_FORMAT_D32_SFLOAT) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 
@@ -88,6 +77,7 @@ void Image::Create(VkFormat format, u32 width, u32 height, u32 mip_levels, VkSam
     view_info.subresourceRange.levelCount = mip_levels;
     view_info.subresourceRange.layerCount = 1;
 
+    VkDevice device = VulkanDevice::handle;
     VK_CHECK(vkCreateImageView(device, &view_info, 0, &view));
 }
 
@@ -96,7 +86,8 @@ void Image::Destroy() {
 
     vkDestroyImageView(device, view, 0);
     vkDestroyImage(device, handle, 0);
-    vkFreeMemory(device, memory, 0);
+
+    FreeVulkanImage(handle, allocation);
 }
 
 VkImageMemoryBarrier CreateBarrier(VkImage image, VkAccessFlags src_access, VkAccessFlags dst_access, VkImageLayout old_layout, VkImageLayout new_layout, VkImageAspectFlags aspect_mask) {
